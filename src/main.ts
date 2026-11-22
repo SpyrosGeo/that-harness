@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { stdin, stdout } from "node:process";
 import * as readline from "node:readline/promises";
 import { readFileTool } from "./tools";
+import { displayResponse } from "./output";
+import { COMMANDS, isCommand, type Command } from "./commands";
 const messages: Anthropic.MessageParam[] = [];
 const rl = readline.createInterface({ input: stdin, output: stdout });
 //init of client
@@ -10,27 +12,13 @@ const client = new Anthropic({
   apiKey: "ollama",
 });
 
-const printLlmResponse = (content: Anthropic.Messages.ContentBlock[]) => {
-  for (const block of content) {
-    if (block.type == "text") {
-      console.log(
-        "==================================================================",
-      );
-      console.log("--", block?.text);
-      console.log(
-        "==================================================================",
-      );
-    }
-    if (block?.type == "tool_use") {
-      console.dir(block, { depth: null });
-    }
-  }
-};
-
-const manageMessages = async (line: string) => {
+const callToLlm = async (
+  line: string,
+  model: "llama3.2:1b" | "qwen3:1.7b" = "qwen3:1.7b",
+) => {
   messages.push({ role: "user", content: line });
   const response: Anthropic.Messages.Message = await client.messages.create({
-    model: "llama3.2:1b",
+    model,
     max_tokens: 1024,
     messages,
     tools: [readFileTool],
@@ -39,12 +27,32 @@ const manageMessages = async (line: string) => {
   if (response.stop_reason?.length) {
     console.log(response?.stop_reason);
   }
-  printLlmResponse(response?.content);
+  displayResponse(response?.content);
+};
+const handleCommand = (cmd: Command) => {
+  switch (cmd) {
+    case COMMANDS.EXIT:
+      return "exit";
+    case COMMANDS.NEW:
+      return "clear";
+    case COMMANDS.MODELS:
+      return "models";
+    default: {
+      const unreachable: never = cmd;
+      return unreachable;
+    }
+  }
 };
 
 while (true) {
   const line: string = await rl.question("> ");
-  if (!line.length || line == "/exit") break;
-  await manageMessages(line);
+  if (!line?.length) continue;
+  if (isCommand(line)) {
+    const result = handleCommand(line);
+    if (result == "exit") break;
+    if (result == "clear") messages.length = 0;
+    continue;
+  }
+  await callToLlm(line);
 }
 rl.close();
