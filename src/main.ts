@@ -10,17 +10,29 @@ const client = new Anthropic({
     apiKey:"ollama"
 });
 
+const printLlmResponse =(content:Anthropic.Messages.ContentBlock[])=>{
+    for(const block of content){
+        if(block.type=="text"){
+        console.log("==================================================================")
+        console.log(block?.text)
+        console.log("==================================================================")
+        } 
+        
+    }
+}
 
 while(true){
 const line:string = await rl.question("> ");
-    console.log("user line",line);
   if(!line.length || line=="/exit") break;
   messages.push({role:"user",content:line})
-    const response:Anthropic.Message = await client.messages.create({
+    const response:Anthropic.Messages.Message = await client.messages.create({
         model:"llama3.2:1b",
         max_tokens:1024,
         messages
   });
     messages.push({role:"assistant",content:response.content})
+    printLlmResponse(response?.content) 
 }
+
+
 rl.close(); 
