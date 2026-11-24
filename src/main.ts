@@ -1,8 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { stdin, stdout } from "node:process";
 import * as readline from "node:readline/promises";
-import { readFileTool } from "./tools";
-import { displayResponse } from "./output";
+import { readFileImpl, readFileTool } from "./tools";
+import { displayLlmTextResponse } from "./output";
 import { COMMANDS, isCommand, type Command } from "./commands";
 const messages: Anthropic.MessageParam[] = [];
 const rl = readline.createInterface({ input: stdin, output: stdout });
@@ -27,7 +27,16 @@ const callToLlm = async (
   if (response.stop_reason?.length) {
     console.log(response?.stop_reason);
   }
-  displayResponse(response?.content);
+  for (const block of response.content) {
+    if (block.type === "text") {
+      displayLlmTextResponse(block.text);
+    }
+    if (block.type === "tool_use") {
+      //TODO determine tool by name and call the correct method for the tool
+      const fileContent = await readFileImpl(block.input);
+      displayLlmTextResponse(fileContent.text);
+    }
+  }
 };
 const handleCommand = (cmd: Command) => {
   switch (cmd) {
