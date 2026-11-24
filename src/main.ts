@@ -3,7 +3,7 @@ import { stdin, stdout } from "node:process";
 import * as readline from "node:readline/promises";
 import { readFileImpl, readFileTool } from "./tools";
 import { displayLlmTextResponse } from "./output";
-import { COMMANDS, isCommand, type Command } from "./commands";
+import { COMMANDS, isCommand } from "./commands";
 const messages: Anthropic.MessageParam[] = [];
 const rl = readline.createInterface({ input: stdin, output: stdout });
 //init of client
@@ -34,21 +34,7 @@ const callToLlm = async (
     if (block.type === "tool_use") {
       //TODO determine tool by name and call the correct method for the tool
       const fileContent = await readFileImpl(block.input);
-      displayLlmTextResponse(fileContent.text);
-    }
-  }
-};
-const handleCommand = (cmd: Command) => {
-  switch (cmd) {
-    case COMMANDS.EXIT:
-      return "exit";
-    case COMMANDS.NEW:
-      return "clear";
-    case COMMANDS.MODELS:
-      return "models";
-    default: {
-      const unreachable: never = cmd;
-      return unreachable;
+      displayLlmTextResponse(fileContent.text, true);
     }
   }
 };
@@ -57,9 +43,8 @@ while (true) {
   const line: string = await rl.question("> ");
   if (!line?.length) continue;
   if (isCommand(line)) {
-    const result = handleCommand(line);
-    if (result == "exit") break;
-    if (result == "clear") messages.length = 0;
+    if (line == COMMANDS.EXIT) break;
+    if (line == COMMANDS.NEW) messages.length = 0;
     continue;
   }
   await callToLlm(line);

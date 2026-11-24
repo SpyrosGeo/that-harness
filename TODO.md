@@ -8,11 +8,11 @@ Check this way to determine how to handle commands with typos
 
 Next: Stage 3b, run the tool and send back the result
 
-1. Fix the path description (src/tools.ts:11). Ask for a path relative to the project folder, like package.json, not "absolute starting from ~/".
-2. Tighten the tool description (src/tools.ts:5). Say when not to use the tool: "Only use this when the user names a specific file."
-3. Write the read_file function. It takes the input from a tool_use block and reads the file with Node's fs/promises readFile. It returns the contents as a string.
-4. Validate the input. Check that path exists and is a string before reading. Never trust input blindly.
-5. Handle failures. For a missing file, a wrong path or a bad input, return an error message. Don't throw and crash.
+1. ~~Fix the path description (src/tools.ts:11). Ask for a path relative to the project folder, like package.json, not "absolute starting from ~/".~~ (done)
+2. ~~Tighten the tool description (src/tools.ts:5). Say when not to use the tool: "Only use this when the user names a specific file."~~ (done)
+3. ~~Write the read_file function. It takes the input from a tool_use block and reads the file with Node's fs/promises readFile. It returns the contents as a string.~~ (done)
+4. ~~Validate the input. Check that path exists and is a string before reading. Never trust input blindly.~~ (done)
+5. ~~Handle failures. For a missing file, a wrong path or a bad input, return an error message. Don't throw and crash.~~ (done)
 6. Connect tool_use blocks to your function. After each response, find the tool_use blocks and pick the matching function by name.
 7. Build the tool_result block. It needs type: "tool_result", a tool_use_id equal to the id of the tool_use block, and content. Add is_error: true when it failed. See ToolResultBlockParam in messages.d.ts:4589.
 8. Push it as a user message. The tool_result goes into messages with role: "user", right after the assistant message that contains the tool_use.
